@@ -476,7 +476,7 @@
           const isStart = item.status === STATUS_STARTED;
           const chip = document.createElement('span');
           chip.className = 'chip ' + (isStart ? 'pause' : 'session');
-          chip.textContent = isStart ? 'Pause' : 'Session';
+          chip.textContent = isStart ? 'Paused ' : 'Session';
           const val = document.createElement('span');
           val.className = 'delta-val';
           val.textContent = ((ms)=>{ms=Math.max(0,ms|0);const m=Math.floor(ms/60000),h=Math.floor(m/60);return String(h).padStart(2,'0')+':'+String(m%60).padStart(2,'0')})(isStart ? (item.restMs||0) : (item.timeUsedMs||0));

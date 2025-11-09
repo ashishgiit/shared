@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Tracker</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 50% -10%, #1f2937, var(--bg));
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: 100%;
+      max-width: 840px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0));
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge {
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid rgba(148,163,184,0.25);
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+    .timer {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      gap: 16px;
+      background: rgba(17,24,39,0.7);
+      border: 1px solid rgba(148,163,184,0.2);
+      padding: 24px;
+      border-radius: 12px;
+    }
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: rgba(148,163,184,0.2);
+      border: 1px solid rgba(148,163,184,0.25);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #4f46e5);
+      transition: width 0.3s ease;
+    }
+    /* Progress row with small time chip */
+    .progress-row { display: flex; align-items: center; gap: 10px; }
+    .progress-row .progress { flex: 1 1 auto; }
+    .time-chip {
+      font-variant-numeric: tabular-nums;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: rgba(17,24,39,0.6);
+      color: var(--text);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .time {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(72px, 14vw, 185px);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      line-height: 1.05;
+      text-align: center;
+      text-shadow: none;
+    }
+    .time.paused-color { color: #861414; transition: color 0.25s ease; }
+    .rest {
+      font-variant-numeric: tabular-nums;
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 4px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: baseline;
+      width: 100%;
+    }
+    .rest .rest-val {
+      color: #ef4444;
+      font-size: 16px;
+      font-weight: 600;
+      width: 166px;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+    .rest .first-start { color: var(--text); opacity: 0.95; margin-left: 0; text-align: center; justify-self: center; }
+    .rest .paused-ongoing {
+      color: #60a5fa;
+      opacity: 0.95;
+      font-size: 16px;
+      font-weight: 600;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(96,165,250,0.12);
+      border: 1px solid rgba(96,165,250,0.25);
+      justify-self: end;
+      text-align: right;
+    }
+    .goal {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 10px;
+    }
+    .goal input[type="number"] {
+      width: 64px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: rgba(17,24,39,0.6);
+      color: var(--text);
+      outline: none;
+    }
+    .quote {
+      color: var(--muted);
+      font-size: 14px;
+      font-style: italic;
+      text-align: center;
+      margin: 6px 0 12px;
+      opacity: 0.95;
+    }
+    button {
+      appearance: none;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: linear-gradient(180deg, rgba(79,70,229,0.18), rgba(79,70,229,0.12));
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .start { background: linear-gradient(180deg, rgba(16,185,129,0.25), rgba(16,185,129,0.12)); }
+    .start:hover { background: linear-gradient(180deg, rgba(16,185,129,0.35), rgba(16,185,129,0.18)); }
+    .pause { background: linear-gradient(180deg, rgba(79,70,229,0.25), rgba(79,70,229,0.12)); }
+    .pause:hover { background: linear-gradient(180deg, rgba(79,70,229,0.35), rgba(79,70,229,0.18)); }
+    .reset { background: linear-gradient(180deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1)); }
+    .reset:hover { background: linear-gradient(180deg, rgba(239,68,68,0.3), rgba(239,68,68,0.16)); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18px;
+      font-size: 14px;
+      background: rgba(17,24,39,0.6);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    thead { background: rgba(148,163,184,0.15); position: sticky; top: 0; z-index: 1; }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(148,163,184,0.15);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    /* Scrollable body showing ~10 rows (approx 42px each) */
+    tbody { display: block; max-height: 420px; overflow-y: auto; }
+    thead, tbody tr { display: table; width: 100%; table-layout: fixed; }
+    tbody tr.started-row { background: rgba(16,185,129,0.08); }
+    tbody tr.paused-row { background: rgba(239,68,68,0.08); }
+    .status {
+      font-weight: 700;
+    }
+    .status.started { color: var(--success); }
+    .status.paused { color: #60a5fa; }
+
+    /* Delta badge styling */
+    .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      line-height: 1.2;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: rgba(148,163,184,0.15);
+      color: var(--text);
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+    .chip.session { background: rgba(79,70,229,0.18); border-color: rgba(79,70,229,0.3); }
+    .chip.pause { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.3); }
+    .delta-val { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    /* Comment input */
+    .comment-input {
+      width: 100%;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: rgba(17,24,39,0.6);
+      color: var(--text);
+      outline: none;
+    }
+
+    @media (max-width: 640px) {
+      .time { font-size: 36px; }
+      .timer { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="quote" id="quote">Time you enjoy wasting is not wasted time.</div>
+    <div class="header">
+      <div class="title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 8v5l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="13" r="9" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <label class="goal" for="goalHours">Goal (h):
+          <input id="goalHours" type="number" min="0.1" step="0.5" value="10" />
+        </label>
+        <button id="startBtn" class="start">Start</button>
+        <button id="pauseBtn" class="pause" style="display:none;">Pause</button>
+      </div>
+      <div class="btns-right">
+        <button id="exportBtn" title="Download CSV of logs">Export CSV</button>
+        <button id="resetBtn" class="reset" title="Clear timer and logs">Reset</button>
+      </div>
+    </div>
+
+    <div class="timer">
+      <div class="progress-row">
+        <div class="progress" aria-label="Progress to goal">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <span id="timeDisplay" class="time-chip">00:00:00</span>
+      </div>
+      <div id="pausedOngoing" class="time">00:00:00</div>
+      <div id="restDisplay" class="rest">
+        <span class="rest-val" id="restVal">Total Rest: 00:00:00</span>
+        <span class="first-start" id="firstStartVal">First Start: --</span>
+      </div>
+    </div>
+
+    <table aria-label="Play/Pause Log">
+      <thead>
+        <tr>
+          <th>Delta</th>
+          <th>Date & Time</th>
+          <th>Status</th>
+          <th>Comment</th>
+        </tr>
+      </thead>
+      <tbody id="logBody">
+        <!-- rows injected here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    (function() {
+      const LS_STATE = 'timer_state_v1';
+      const LS_LOGS = 'timer_logs_v1';
+      const LS_RESET_FLAG = 'timer_reset_flag_v1';
+      const LS_GOAL_HOURS = 'timer_goal_hours_v1';
+      const STATUS_STARTED = 'Started';
+      const STATUS_PAUSED = 'Paused';
+      const QUOTES = [
+        'Time you enjoy wasting is not wasted time. — Marthe Troly-Curtin',
+        'The key is in not spending time, but in investing it. — Stephen R. Covey',
+        'It’s not that we have little time, but more that we waste a good deal of it. — Seneca',
+        'Lost time is never found again. — Benjamin Franklin',
+        'The bad news is time flies. The good news is you’re the pilot. — Michael Altshuler'
+      ];
+
+      const timeDisplay = document.getElementById('timeDisplay');
+      const startBtn = document.getElementById('startBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const logBody = document.getElementById('logBody');
+      const goalInput = document.getElementById('goalHours');
+
+      let state = {
+        running: false,
+        startTs: null,        // epoch ms when last started
+        elapsedMs: 0,         // accumulated running time (not including current run)
+        lastStartTs: null,    // for computing time used at pause
+        lastPauseTs: null     // for computing rest time at start
+      };
+
+      let logs = [];
+      let intervalId = null;
+      let pauseUiIntervalId = null; // updates paused counter while paused
+
+      function fmt(ms) {
+        ms = Math.max(0, Math.floor(ms));
+        const totalSec = Math.floor(ms / 1000);
+        const hh = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+        const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+        const ss = String(totalSec % 60).padStart(2, '0');
+        return `${hh}:${mm}:${ss}`;
+      }
+
+      function now() { return Date.now(); }
+
+      function persist() {
+        try {
+          localStorage.setItem(LS_STATE, JSON.stringify(state));
+          localStorage.setItem(LS_LOGS, JSON.stringify(logs));
+        } catch (e) { /* ignore quota */ }
+      }
+
+      function restore() {
+        try {
+          if (localStorage.getItem(LS_RESET_FLAG) === 'true') {
+            localStorage.removeItem(LS_STATE);
+            localStorage.removeItem(LS_LOGS);
+            localStorage.removeItem(LS_RESET_FLAG);
+          }
+          const s = localStorage.getItem(LS_STATE);
+          const l = localStorage.getItem(LS_LOGS);
+          const gh = localStorage.getItem('timer_goal_hours_v1');
+          if (s) state = Object.assign(state, JSON.parse(s));
+          if (l) logs = JSON.parse(l);
+          if (goalInput && gh) goalInput.value = String(gh);
+        } catch (e) { /* ignore parse errors */ }
+      }
+
+      function liveElapsedMs() {
+        return (state.running && state.startTs) ? (now() - state.startTs) : 0;
+      }
+
+      function renderTime() {
+        timeDisplay.textContent = fmt(state.elapsedMs + liveElapsedMs());
+      }
+
+      function goalMs() {
+        let h = 10;
+        if (goalInput) {
+          const v = parseFloat(goalInput.value);
+          if (!isNaN(v) && v > 0) h = v;
+        }
+        return h * 60 * 60 * 1000;
+      }
+      function renderProgress() {
+        const bar = document.getElementById('progressBar');
+        if (!bar) return;
+        const total = state.elapsedMs + liveElapsedMs();
+        const pct = Math.max(0, Math.min(100, (total / goalMs()) * 100));
+        bar.style.width = pct.toFixed(2) + '%';
+      }
+
+      function totalRestMs() {
+        const loggedRest = logs.reduce((acc, item) => acc + (item.restMs || 0), 0);
+        // If currently paused, add the ongoing rest time since last pause
+        const ongoingRest = (!state.running && state.lastPauseTs) ? (now() - state.lastPauseTs) : 0;
+        return loggedRest + ongoingRest;
+      }
+
+      function renderRest() {
+        const restValEl = document.getElementById('restVal');
+        const firstStartEl = document.getElementById('firstStartVal');
+        const pausedOngoingEl = document.getElementById('pausedOngoing');
+        if (restValEl) restValEl.textContent = 'Total Rest: ' + fmt(totalRestMs());
+        if (firstStartEl) {
+          const firstStart = logs
+            .filter(x => x && x.status === STATUS_STARTED && typeof x.at === 'number')
+            .map(x => x.at)
+            .sort((a,b) => a - b)[0];
+          firstStartEl.textContent = 'First Start: ' + (firstStart ? new Date(firstStart).toLocaleString() : '--');
+        }
+        if (pausedOngoingEl) {
+          let label = state.running ? 'Running' : 'Paused';
+          let ms = 0;
+          if (state.running && state.lastStartTs) {
+            ms = now() - state.lastStartTs;
+          } else if (!state.running && state.lastPauseTs) {
+            ms = now() - state.lastPauseTs;
+          }
+          pausedOngoingEl.textContent =  fmt(ms);
+          if (!state.running) {
+            pausedOngoingEl.classList.add('paused-color');
+          } else {
+            pausedOngoingEl.classList.remove('paused-color');
+          }
+        }
+      }
+
+      function exportCsv() {
+        const rows = [['dateTime','status','comment']];
+        const sorted = [...logs].sort((a,b) => (a.at || 0) - (b.at || 0));
+        for (const item of sorted) {
+          rows.push([new Date(item.at).toLocaleString(), item.status, item.comment || '']);
+        }
+        const csv = rows
+          .map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))
+          .join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+        a.download = `date_time_tracking_${dateStr}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function renderButtons() {
+        if (state.running) {
+          startBtn.style.display = 'none';
+          pauseBtn.style.display = '';
+        } else {
+          startBtn.style.display = '';
+          pauseBtn.style.display = 'none';
+        }
+      }
+
+      function renderLogs() {
+        logBody.innerHTML = '';
+        const sorted = [...logs].sort((a, b) => (b.at || 0) - (a.at || 0));
+        for (const item of sorted) {
+          const tr = document.createElement('tr');
+          tr.className = item.status === STATUS_STARTED ? 'started-row' : 'paused-row';
+          const statusTd = document.createElement('td');
+          const dtTd = document.createElement('td');
+          const deltaTd = document.createElement('td');
+          const commentTd = document.createElement('td');
+
+          statusTd.textContent = item.status;
+          statusTd.className = 'status ' + (item.status === STATUS_STARTED ? 'started' : 'paused');
+          dtTd.textContent = new Date(item.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+          const isStart = item.status === STATUS_STARTED;
+          const chip = document.createElement('span');
+          chip.className = 'chip ' + (isStart ? 'pause' : 'session');
+          chip.textContent = isStart ? 'Pause' : 'Session';
+          const val = document.createElement('span');
+          val.className = 'delta-val';
+          val.textContent = ((ms)=>{ms=Math.max(0,ms|0);const m=Math.floor(ms/60000),h=Math.floor(m/60);return String(h).padStart(2,'0')+':'+String(m%60).padStart(2,'0')})(isStart ? (item.restMs||0) : (item.timeUsedMs||0));
+          deltaTd.appendChild(chip);
+          deltaTd.appendChild(val);
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'comment-input';
+          input.placeholder = 'Add comment';
+          input.value = item.comment || '';
+          input.addEventListener('change', () => {
+            const idx = logs.findIndex(x => x && x.at === item.at && x.status === item.status);
+            if (idx !== -1) {
+              logs[idx].comment = input.value;
+              persist();
+            }
+          });
+          commentTd.appendChild(input);
+
+          tr.appendChild(deltaTd);
+          tr.appendChild(dtTd);
+          tr.appendChild(statusTd);
+          tr.appendChild(commentTd);
+          logBody.appendChild(tr);
+        }
+      }
+
+      function startInterval() {
+        if (intervalId) return;
+        intervalId = setInterval(() => {
+          renderTime();
+          renderProgress();
+          renderRest();
+          // store lightweight state to survive refresh while running
+          persist();
+        }, 1000);
+      }
+
+      function stopInterval() {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      }
+
+      function onStart() {
+        const t = now();
+        // If resuming from pause, compute rest time since last pause
+        let restMs = 0;
+        if (!state.running && state.lastPauseTs) {
+          restMs = t - state.lastPauseTs;
+        }
+        state.running = true;
+        state.startTs = t;
+        state.lastStartTs = t;
+
+        logs.push({
+          status: STATUS_STARTED,
+          at: t,
+          timeUsedMs: state.elapsedMs, // elapsed so far before starting again
+          restMs
+        });
+
+        // stop paused-only UI ticker if any
+        if (pauseUiIntervalId) {
+          clearInterval(pauseUiIntervalId);
+          pauseUiIntervalId = null;
+        }
+
+        renderButtons();
+        renderLogs();
+        startInterval();
+        persist();
+        renderTime();
+        renderProgress();
+        renderRest();
+      }
+
+      function onPause() {
+        if (!state.running) return;
+        const t = now();
+        const thisRun = t - (state.startTs || t);
+        state.elapsedMs += thisRun;
+        state.running = false;
+        state.startTs = null;
+
+        let timeUsedMs = 0;
+        if (state.lastStartTs) {
+          timeUsedMs = t - state.lastStartTs;
+        }
+        state.lastPauseTs = t;
+
+        logs.push({
+          status: STATUS_PAUSED,
+          at: t,
+          timeUsedMs,
+          restMs: 0
+        });
+
+        stopInterval();
+        // start a lightweight ticker to update paused duration every second while paused
+        if (!pauseUiIntervalId) {
+          pauseUiIntervalId = setInterval(() => {
+            renderRest();
+          }, 1000);
+        }
+        renderButtons();
+        renderLogs();
+        persist();
+        renderTime();
+        renderProgress();
+        renderRest();
+      }
+
+      function onReset() {
+        const ok = confirm('Reset all data (timer and logs)?');
+        if (!ok) return;
+        // Export logs before clearing
+        try { exportCsv(); } catch (e) {}
+        try {
+          // mark flag first, then clear our keys, then remove flag to keep storage tidy
+          localStorage.setItem(LS_RESET_FLAG, 'true');
+          localStorage.removeItem(LS_STATE);
+          localStorage.removeItem(LS_LOGS);
+          localStorage.removeItem(LS_RESET_FLAG);
+        } catch (e) {}
+
+        stopInterval();
+        if (pauseUiIntervalId) {
+          clearInterval(pauseUiIntervalId);
+          pauseUiIntervalId = null;
+        }
+        state = { running: false, startTs: null, elapsedMs: 0, lastStartTs: null, lastPauseTs: null };
+        logs = [];
+        renderButtons();
+        renderLogs();
+        renderTime();
+        renderProgress();
+        renderRest();
+      }
+
+      // Wire up events
+      startBtn.addEventListener('click', onStart);
+      pauseBtn.addEventListener('click', onPause);
+      resetBtn.addEventListener('click', onReset);
+      if (exportBtn) exportBtn.addEventListener('click', exportCsv);
+      if (goalInput) {
+        goalInput.addEventListener('input', () => {
+          const v = parseFloat(goalInput.value);
+          if (isNaN(v) || v <= 0) return; // ignore invalid
+          try { localStorage.setItem('timer_goal_hours_v1', String(v)); } catch (e) {}
+          renderProgress();
+        });
+      }
+
+      // Keyboard: Space toggles Start/Pause (unless typing in fields)
+      document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar') {
+          const tag = (e.target && e.target.tagName ? e.target.tagName : '').toLowerCase();
+          const isEditable = e.target && (e.target.isContentEditable || tag === 'input' || tag === 'textarea');
+          if (isEditable) return; // do not hijack typing
+          e.preventDefault(); // prevent page scroll / default button click
+          if (state.running) {
+            onPause();
+          } else {
+            onStart();
+          }
+        }
+      });
+
+      // Init
+      restore();
+      // Quote
+      (function setQuote(){
+        const qEl = document.getElementById('quote');
+        if (!qEl) return;
+        try {
+          const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+          if (q) qEl.textContent = q;
+        } catch (e) {}
+      })();
+      renderLogs();
+
+      if (state.running && state.startTs) {
+        // Adjust for time elapsed while page was closed
+        // Keep startTs as recorded so total shows correctly
+        renderButtons();
+        startInterval();
+      } else {
+        renderButtons();
+      }
+      renderTime();
+      renderProgress();
+      renderRest();
+
+      // Persist once on load to ensure structure exists
+      persist();
+    })();
+  </script>
+</body>
+</html>

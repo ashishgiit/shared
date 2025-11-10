@@ -29,19 +29,55 @@
     }
     .app {
       width: 100%;
-      max-width: 840px;
+      max-width: 960px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0));
-      border: 1px solid rgba(148,163,184,0.2);
+      border: 1px solid rgba(148,163,184,0.16);
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.04);
     }
+    .layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: stretch; }
+    .main { display: block; }
+    .tasks {
+      background: rgba(17,24,39,0.55);
+      border: 1px solid rgba(148,163,184,0.16);
+      border-radius: 12px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; min-height: 100%;
+    }
+    .tasks h3 { margin: 0 0 8px; font-size: 16px; color: var(--text); }
+    .task-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .task-input-row input[type="text"] {
+      flex: 1 1 auto;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: rgba(17,24,39,0.6);
+      color: var(--text);
+      outline: none;
+    }
+    .task-input-row button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: linear-gradient(180deg, rgba(79,70,229,0.18), rgba(79,70,229,0.12));
+      color: var(--text);
+      cursor: pointer;
+    }
+    .task-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+    .task-item { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 8px; border: 1px solid rgba(148,163,184,0.15); border-radius: 8px; background: rgba(17,24,39,0.5); }
+    .task-item.completed .title { text-decoration: line-through; color: var(--muted); }
+    .task-item .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .task-item button.delete { border: 1px solid rgba(239,68,68,0.35); background: rgba(239,68,68,0.15); color: var(--text); border-radius: 8px; padding: 6px 8px; cursor: pointer; }
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
     }
     .title {
       display: flex;
@@ -50,28 +86,24 @@
       font-weight: 700;
       letter-spacing: 0.3px;
     }
-    .badge {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid rgba(148,163,184,0.25);
-      padding: 4px 8px;
-      border-radius: 999px;
-    }
     .timer {
       display: grid;
       grid-template-columns: 1fr;
       align-items: center;
       gap: 16px;
-      background: rgba(17,24,39,0.7);
-      border: 1px solid rgba(148,163,184,0.2);
+      background: rgba(17,24,39,0.55);
+      border: 1px solid rgba(148,163,184,0.16);
       padding: 24px;
       border-radius: 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
     }
     .progress {
       width: 100%;
-      height: 10px;
-      background: rgba(148,163,184,0.2);
-      border: 1px solid rgba(148,163,184,0.25);
+      height: 14px; /* already increased */
+      background: rgba(148,163,184,0.18);
+      border: 1px solid rgba(148,163,184,0.22);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -80,19 +112,32 @@
       width: 0%;
       background: linear-gradient(90deg, #10b981, #4f46e5);
       transition: width 0.3s ease;
+      border-radius: 999px;
     }
     /* Progress row with small time chip */
     .progress-row { display: flex; align-items: center; gap: 10px; }
     .progress-row .progress { flex: 1 1 auto; }
     .time-chip {
       font-variant-numeric: tabular-nums;
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(148,163,184,0.25);
-      background: rgba(17,24,39,0.6);
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.22);
+      background: rgba(31,41,55,0.7);
       color: var(--text);
       font-size: 14px;
       white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    /* Unified pill styling */
+    #timeDisplay.time-chip,
+    #timeDisplay,
+    .rest .paused-ongoing,
+    .rest .rest-val {
+      border-radius: 999px;
+      padding: 6px 12px;
+      border: 1px solid rgba(148,163,184,0.22);
+      background: rgba(31,41,55,0.7);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
     .time {
       font-variant-numeric: tabular-nums;
@@ -108,7 +153,7 @@
       font-variant-numeric: tabular-nums;
       font-size: 14px;
       opacity: 0.9;
-      margin-top: 4px;
+      margin-top: 2px; /* tighter spacing above */
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       gap: 10px;
@@ -116,27 +161,22 @@
       width: 100%;
     }
     .rest .rest-val {
-      color: #ef4444;
+      color: #f87171;
       font-size: 16px;
       font-weight: 600;
-      width: 166px;
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 8px;
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.25);
+      background: rgba(248,113,113,0.10);
+      border: 1px solid rgba(248,113,113,0.22);
     }
     .rest .first-start { color: var(--text); opacity: 0.95; margin-left: 0; text-align: center; justify-self: center; }
-    .paused-ongoing {
-      color: #60a5fa;
+    .rest .paused-ongoing {
+      color: #93c5fd;
       opacity: 0.95;
       font-size: 16px;
       font-weight: 600;
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 8px;
-      background: rgba(96,165,250,0.12);
-      border: 1px solid rgba(96,165,250,0.25);
+      background: rgba(96,165,250,0.10);
+      border: 1px solid rgba(96,165,250,0.22);
       justify-self: end;
       text-align: right;
     }
@@ -200,17 +240,17 @@
       text-align: left;
       border-bottom: 1px solid rgba(148,163,184,0.15);
     }
+    /* Make comment column wider */
+    .comment-col { width: 48%; }
     tbody tr:last-child td { border-bottom: none; }
     /* Scrollable body showing ~10 rows (approx 42px each) */
     tbody { display: block; max-height: 420px; overflow-y: auto; }
     thead, tbody tr { display: table; width: 100%; table-layout: fixed; }
-    tbody tr.started-row { background: rgba(16,185,129,0.08); }
-    tbody tr.paused-row { background: rgba(239,68,68,0.08); }
-    .status {
-      font-weight: 700;
-    }
-    .status.started { color: var(--success); }
-    .status.paused { color: #60a5fa; }
+    tbody tr.started-row { background: rgba(16,185,129,0.06); }
+    tbody tr.paused-row { background: rgba(239,68,68,0.06); }
+    /* Zebra striping overlay */
+    tbody tr:nth-child(even) { filter: brightness(1.03); }
+    
 
     /* Delta badge styling */
     .chip {
@@ -248,8 +288,10 @@
 </head>
 <body>
   <div class="app">
-    <div class="quote" id="quote">Time you enjoy wasting is not wasted time.</div>
-    <div class="header">
+    <div class="layout">
+      <div class="main">
+        <div class="quote" id="quote">Time you enjoy wasting is not wasted time.</div>
+        <div class="header">
       <div class="title">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12 8v5l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -265,9 +307,9 @@
         <button id="exportBtn" title="Download CSV of logs">Export CSV</button>
         <button id="resetBtn" class="reset" title="Clear timer and logs">Reset</button>
       </div>
-    </div>
+        </div>
 
-    <div class="timer">
+        <div class="timer">
       <div class="progress-row">
         <div class="progress" aria-label="Progress to goal">
           <div id="progressBar" class="progress-bar"></div>
@@ -279,21 +321,30 @@
         <span class="rest-val" id="restVal">Total Rest: 00:00:00</span>
         <span class="first-start" id="firstStartVal">First Start: --</span>
       </div>
-    </div>
+        </div>
 
-    <table aria-label="Play/Pause Log">
+        <table aria-label="Play/Pause Log">
       <thead>
         <tr>
-          <th>Delta</th>
-          <th>Date & Time</th>
-          <th>Status</th>
-          <th>Comment</th>
+          <th>..Status</th>
+          <th>End Time</th>
+          <th class="comment-col">Comment</th>
         </tr>
       </thead>
       <tbody id="logBody">
         <!-- rows injected here -->
       </tbody>
-    </table>
+        </table>
+      </div>
+      <aside class="tasks" aria-label="Upcoming Tasks">
+        <h3>Upcoming Tasks</h3>
+        <div class="task-input-row">
+          <input id="taskInput" type="text" placeholder="Add a task" />
+          <button id="taskAddBtn">Add</button>
+        </div>
+        <ul id="taskList" class="task-list"></ul>
+      </aside>
+    </div>
   </div>
 
   <script>
@@ -302,6 +353,7 @@
       const LS_LOGS = 'timer_logs_v1';
       const LS_RESET_FLAG = 'timer_reset_flag_v1';
       const LS_GOAL_HOURS = 'timer_goal_hours_v1';
+      const LS_TASKS = 'timer_tasks_v1';
       const STATUS_STARTED = 'Started';
       const STATUS_PAUSED = 'Paused';
       const QUOTES = [
@@ -319,6 +371,9 @@
       const exportBtn = document.getElementById('exportBtn');
       const logBody = document.getElementById('logBody');
       const goalInput = document.getElementById('goalHours');
+      const taskInput = document.getElementById('taskInput');
+      const taskAddBtn = document.getElementById('taskAddBtn');
+      const taskList = document.getElementById('taskList');
 
       let state = {
         running: false,
@@ -331,6 +386,7 @@
       let logs = [];
       let intervalId = null;
       let pauseUiIntervalId = null; // updates paused counter while paused
+      let tasks = [];
 
       function fmt(ms) {
         ms = Math.max(0, Math.floor(ms));
@@ -341,12 +397,51 @@
         return `${hh}:${mm}:${ss}`;
       }
 
+      function renderTasks() {
+        if (!taskList) return;
+        taskList.innerHTML = '';
+        for (const item of tasks) {
+          const li = document.createElement('li');
+          li.className = 'task-item' + (item.completed ? ' completed' : '');
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = !!item.completed;
+          cb.addEventListener('change', () => { item.completed = cb.checked; persist(); renderTasks(); });
+          const title = document.createElement('div');
+          title.className = 'title';
+          title.textContent = item.title || '';
+          const del = document.createElement('button');
+          del.className = 'delete';
+          del.textContent = 'Delete';
+          del.addEventListener('click', () => {
+            tasks = tasks.filter(t => t.id !== item.id);
+            persist();
+            renderTasks();
+          });
+          li.appendChild(cb);
+          li.appendChild(title);
+          li.appendChild(del);
+          taskList.appendChild(li);
+        }
+      }
+
+      function addTaskFromInput() {
+        if (!taskInput) return;
+        const v = (taskInput.value || '').trim();
+        if (!v) return;
+        tasks.unshift({ id: Date.now() + ':' + Math.random().toString(36).slice(2,7), title: v, completed: false });
+        taskInput.value = '';
+        persist();
+        renderTasks();
+      }
+
       function now() { return Date.now(); }
 
       function persist() {
         try {
           localStorage.setItem(LS_STATE, JSON.stringify(state));
           localStorage.setItem(LS_LOGS, JSON.stringify(logs));
+          localStorage.setItem(LS_TASKS, JSON.stringify(tasks));
         } catch (e) { /* ignore quota */ }
       }
 
@@ -359,10 +454,12 @@
           }
           const s = localStorage.getItem(LS_STATE);
           const l = localStorage.getItem(LS_LOGS);
-          const gh = localStorage.getItem('timer_goal_hours_v1');
+          const gh = localStorage.getItem(LS_GOAL_HOURS);
+          const tks = localStorage.getItem(LS_TASKS);
           if (s) state = Object.assign(state, JSON.parse(s));
           if (l) logs = JSON.parse(l);
           if (goalInput && gh) goalInput.value = String(gh);
+          if (tks) tasks = JSON.parse(tks);
         } catch (e) { /* ignore parse errors */ }
       }
 
@@ -465,18 +562,16 @@
         for (const item of sorted) {
           const tr = document.createElement('tr');
           tr.className = item.status === STATUS_STARTED ? 'started-row' : 'paused-row';
-          const statusTd = document.createElement('td');
           const dtTd = document.createElement('td');
           const deltaTd = document.createElement('td');
           const commentTd = document.createElement('td');
+          commentTd.className = 'comment-col';
 
-          statusTd.textContent = item.status;
-          statusTd.className = 'status ' + (item.status === STATUS_STARTED ? 'started' : 'paused');
           dtTd.textContent = new Date(item.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
           const isStart = item.status === STATUS_STARTED;
           const chip = document.createElement('span');
           chip.className = 'chip ' + (isStart ? 'pause' : 'session');
-          chip.textContent = isStart ? 'Paused ' : 'Session';
+          chip.textContent = isStart ? 'Paused.' : 'Session';
           const val = document.createElement('span');
           val.className = 'delta-val';
           val.textContent = ((ms)=>{ms=Math.max(0,ms|0);const m=Math.floor(ms/60000),h=Math.floor(m/60);return String(h).padStart(2,'0')+':'+String(m%60).padStart(2,'0')})(isStart ? (item.restMs||0) : (item.timeUsedMs||0));
@@ -499,7 +594,6 @@
 
           tr.appendChild(deltaTd);
           tr.appendChild(dtTd);
-          tr.appendChild(statusTd);
           tr.appendChild(commentTd);
           logBody.appendChild(tr);
         }
@@ -628,10 +722,13 @@
         goalInput.addEventListener('input', () => {
           const v = parseFloat(goalInput.value);
           if (isNaN(v) || v <= 0) return; // ignore invalid
-          try { localStorage.setItem('timer_goal_hours_v1', String(v)); } catch (e) {}
+          try { localStorage.setItem(LS_GOAL_HOURS, String(v)); } catch (e) {}
           renderProgress();
         });
       }
+
+      if (taskAddBtn) taskAddBtn.addEventListener('click', addTaskFromInput);
+      if (taskInput) taskInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTaskFromInput(); });
 
       // Keyboard: Space toggles Start/Pause (unless typing in fields)
       document.addEventListener('keydown', (e) => {
@@ -672,6 +769,7 @@
       renderTime();
       renderProgress();
       renderRest();
+      renderTasks();
 
       // Persist once on load to ensure structure exists
       persist();

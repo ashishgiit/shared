@@ -196,13 +196,11 @@
       font-size: 14px;
       opacity: 0.9;
       margin-top: 2px; /* tighter spacing above */
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 10px;
-      align-items: baseline;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
       width: 100%;
     }
-    .rest .first-start { color: var(--text); opacity: 0.95; margin-left: 0; text-align: center; justify-self: center; }
     .rest .paused-ongoing {
       color: #93c5fd;
       opacity: 0.95;
@@ -367,7 +365,7 @@
       </div>
       <div id="pausedOngoing" class="time">00:00:00</div>
       <div id="restDisplay" class="rest">
-        <span class="first-start" id="firstStartVal">First Start: --</span>
+        <!-- Rest time progress is now shown in the progress bar above -->
       </div>
         </div>
 
@@ -543,7 +541,6 @@
       }
 
       function renderRest() {
-        const firstStartEl = document.getElementById('firstStartVal');
         const pausedOngoingEl = document.getElementById('pausedOngoing');
         const restMs = totalRestMs();
         const restValDisplay = document.getElementById('restValDisplay');
@@ -556,13 +553,6 @@
           const goal = goalMs();
           const pct = Math.max(0, Math.min(100, (restMs / goal) * 100));
           restProgressBar.style.width = pct.toFixed(2) + '%';
-        }
-        if (firstStartEl) {
-          const firstStart = logs
-            .filter(x => x && x.status === STATUS_STARTED && typeof x.at === 'number')
-            .map(x => x.at)
-            .sort((a,b) => a - b)[0];
-          firstStartEl.textContent = 'First Start: ' + (firstStart ? new Date(firstStart).toLocaleString() : '--');
         }
         if (pausedOngoingEl) {
           let label = state.running ? 'Running' : 'Paused';
